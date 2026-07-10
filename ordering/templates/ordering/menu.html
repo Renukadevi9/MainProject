@@ -1,0 +1,535 @@
+{% extends 'ordering/base.html' %}
+{% block title %}Menu - Apex Gourmet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Banner Section styling */
+    .hero-banner {
+        position: relative;
+        background-image: linear-gradient(rgba(11, 11, 13, 0.75), rgba(11, 11, 13, 0.85)), 
+                          url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80');
+        background-size: cover;
+        background-position: center;
+        border-radius: 24px;
+        overflow: hidden;
+        padding: 80px 40px;
+        margin-bottom: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .hero-subtitle {
+        color: var(--text-muted);
+        max-width: 600px;
+    }
+
+    /* Category pills styling */
+    .category-pills-container {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+        padding-bottom: 5px;
+    }
+    .category-pills-container::-webkit-scrollbar {
+        display: none;
+    }
+    .category-pill {
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    /* Gourmet Grid Cards styling */
+    .gourmet-card {
+        background-color: var(--bg-card) !important;
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+        border-radius: 20px !important;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .gourmet-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.5) !important;
+        border-color: rgba(255, 193, 7, 0.2) !important;
+    }
+    
+    .card-photo-wrapper {
+        position: relative;
+        height: 180px;
+        overflow: hidden;
+        background-color: #0b0b0d;
+    }
+    .card-photo-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 35%;
+        background: linear-gradient(to top, var(--bg-card), transparent);
+        z-index: 2;
+    }
+    .gourmet-card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gourmet-card:hover .gourmet-card-img {
+        transform: scale(1.06);
+    }
+
+    /* Floating Badges */
+    .badge-floating-left {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 10;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .badge-floating-right {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 10;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    .veg-dot-badge {
+        background-color: rgba(25, 135, 84, 0.85);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 700;
+        padding: 4px 10px;
+    }
+    .nonveg-dot-badge {
+        background-color: rgba(220, 53, 69, 0.85);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 700;
+        padding: 4px 10px;
+    }
+    .spicy-badge {
+        background-color: rgba(220, 53, 69, 0.9);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 700;
+        padding: 4px 8px;
+    }
+
+    /* Card pricing and button alignment */
+    .price-gold {
+        color: var(--accent-gold);
+        font-weight: 700;
+        font-size: 1.35rem;
+    }
+    
+    .btn-add-item {
+        border: 1px solid var(--accent-gold);
+        color: var(--accent-gold);
+        background: transparent;
+        font-weight: 600;
+        padding: 4px 14px;
+        border-radius: 50px;
+        transition: all 0.2s ease;
+    }
+    .btn-add-item:hover {
+        background-color: var(--accent-gold);
+        color: #0b0b0d;
+    }
+
+    /* Sidebar Shopping Cart adjustments */
+    .sticky-sidebar {
+        position: sticky;
+        top: 95px;
+        max-height: calc(100vh - 130px);
+        overflow-y: auto;
+        background-color: var(--bg-card) !important;
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+        border-radius: 24px !important;
+    }
+    .cart-items-wrapper {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+    
+    <!-- Hero Banner Component -->
+    <div class="hero-banner shadow-lg text-center text-md-start">
+        <div class="row align-items-center py-4">
+            <div class="col-md-8 ps-md-5">
+                <span class="badge bg-gold text-dark fw-bold mb-3 uppercase px-3 py-2 rounded-pill small">Michelin Standard Cuisines</span>
+                <h1 class="hero-title text-light mb-3 serif-font">Exquisite Culinary Craft</h1>
+                <p class="hero-subtitle mb-4 fs-6">
+                    Welcome to Apex Gourmet. Experience sensory delight with artisanal preparations curated by global chefs, designed around high-contrast luxury gastronomy.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start">
+                    <a href="#menu-catalog-anchor" class="btn btn-gold px-4 py-2">
+                        <i class="fa-solid fa-arrow-down me-2"></i>Order Now
+                    </a>
+                    <a href="{% url 'kitchen_dashboard' %}" class="btn btn-outline-gold px-4 py-2">
+                        <i class="fa-solid fa-kitchen-set me-2"></i>Kitchen View
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anchored Menu Catalog -->
+    <div id="menu-catalog-anchor" class="row g-4">
+        
+        <!-- Main Catalog and Filters Pane -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 border-bottom border-secondary-subtle pb-3">
+                <h4 class="fw-bold m-0 serif-font text-gold" id="selected-category-header">All Cuisines</h4>
+                <!-- Category Filters -->
+                <div class="category-pills-container gap-2" style="max-width: 100%;">
+                    <button class="btn btn-gold btn-sm category-pill rounded-pill px-3 active" data-category-slug="all">
+                        All Dishes
+                    </button>
+                    {% for cat in categories %}
+                    <button class="btn btn-outline-gold btn-sm category-pill rounded-pill px-3" data-category-slug="{{ cat.slug }}">
+                        {{ cat.name }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Responsive Food Grid -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="menu-grid">
+                {% for cat in categories %}
+                    {% for item in cat.items.all %}
+                    <div class="col menu-item-card-wrapper animate-fade-in" data-category="{{ cat.slug }}">
+                        <div class="card h-100 gourmet-card shadow-sm">
+                            
+                            <!-- High-Quality Food Photo Wrapper -->
+                            <div class="card-photo-wrapper">
+                                <img src="{{ item.image_url|default:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80' }}" 
+                                     class="gourmet-card-img" 
+                                     alt="{{ item.name }}" 
+                                     loading="lazy">
+                                     
+                                <!-- Floating Attributes -->
+                                <div class="badge-floating-left">
+                                    {% if item.is_veg %}
+                                        <span class="badge veg-dot-badge rounded-pill"><i class="fa-solid fa-leaf me-1"></i>Veg</span>
+                                    {% else %}
+                                        <span class="badge nonveg-dot-badge rounded-pill"><i class="fa-solid fa-circle me-1" style="font-size: 0.5rem; vertical-align: middle;"></i>Non-Veg</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if item.is_spicy %}
+                                <div class="badge-floating-right">
+                                    <span class="badge spicy-badge rounded-pill"><i class="fa-solid fa-pepper-hot me-1 text-warning"></i>Spicy</span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Card Body (Charcoal background) -->
+                            <div class="card-body p-4 d-flex flex-column" style="background-color: var(--bg-card);">
+                                <h5 class="card-title fw-bold text-light mb-2 text-truncate" title="{{ item.name }}">{{ item.name }}</h5>
+                                <p class="card-text text-secondary small mb-4 flex-grow-1" style="font-size: 0.85rem; line-height: 1.4;">
+                                    {{ item.description|default:"Exclusive chef recipe, tailored using fresh select regional toppings." }}
+                                </p>
+                                
+                                <!-- Card Footer -->
+                                <div class="d-flex justify-content-between align-items-center mt-auto border-top border-secondary-subtle pt-3">
+                                    <span class="price-gold">₹{{ item.price|floatformat:0 }}</span>
+                                    <button class="btn btn-add-item add-to-cart-btn"
+                                            data-id="{{ item.id }}"
+                                            data-name="{{ item.name }}"
+                                            data-price="{{ item.price }}">
+                                        <i class="fa-solid fa-plus me-1"></i>Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fa-solid fa-utensils fs-1 text-secondary mb-3"></i>
+                    <p class="text-secondary">Seeding menu records... Check back soon.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sticky Shopping Cart Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg sticky-sidebar p-4">
+                <h4 class="fw-bold mb-4 serif-font text-gold d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-cart-shopping me-2"></i>My Cart</span>
+                    <span class="badge bg-gold text-dark rounded-pill fs-6 px-3" id="cart-count">0</span>
+                </h4>
+
+                <!-- Empty State -->
+                <div class="text-center py-5 d-none" id="empty-cart-view">
+                    <i class="fa-solid fa-utensils text-secondary fs-1 mb-3" style="opacity: 0.3;"></i>
+                    <h6 class="fw-bold text-light mb-1">Your cart is empty</h6>
+                    <p class="text-secondary small">Add premium dishes from our menu to build your table order.</p>
+                </div>
+
+                <!-- Active Cart details -->
+                <div id="active-cart-view">
+                    <div class="cart-items-wrapper border-bottom border-secondary-subtle pb-3 mb-3" id="cart-items-container">
+                        <!-- Filled dynamically -->
+                    </div>
+
+                    <!-- Computations -->
+                    <div class="d-flex justify-content-between small text-secondary mb-2">
+                        <span>Subtotal</span>
+                        <span id="cart-subtotal">₹0</span>
+                    </div>
+                    <div class="d-flex justify-content-between small text-secondary mb-2">
+                        <span>GST (8%)</span>
+                        <span id="cart-tax">₹0</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold fs-5 mb-4 border-top border-secondary-subtle pt-2">
+                        <span>Grand Total</span>
+                        <span class="text-gold" id="cart-total">₹0</span>
+                    </div>
+
+                    <!-- Form details -->
+                    <div id="checkout-form-section">
+                        <h6 class="fw-bold text-gold mb-3"><i class="fa-solid fa-chair me-2"></i>Table Placement</h6>
+                        <div class="alert alert-danger d-none border-0 rounded-3 py-2 small" id="checkout-error-alert"></div>
+                        <form id="checkout-form">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control rounded-3" id="customerName" placeholder="Your Name" required style="background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); color: #fff;">
+                                <label for="customerName" class="text-secondary">Your Name</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control rounded-3" id="customerPhone" placeholder="Phone Number" required pattern="^\+?1?\d{9,15}$" title="Enter a valid phone number (9 to 15 digits)." style="background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); color: #fff;">
+                                <label for="customerPhone" class="text-secondary">Phone Number</label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <input type="text" class="form-control rounded-3" id="tableNumber" placeholder="Table Number" required style="background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); color: #fff;">
+                                <label for="tableNumber" class="text-secondary">Table / Cabinet Number</label>
+                            </div>
+                            <button type="submit" class="btn btn-gold w-100 py-3 fw-bold shadow-sm" id="submit-order-btn">
+                                <i class="fa-solid fa-cash-register me-2"></i>Place Table Order
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const serverCart = {{ session_cart_json|default:"{}"|safe }};
+        let localCart = JSON.parse(localStorage.getItem('restaurant_cart')) || {};
+
+        // Merge logic: If local storage has items, preserve it; otherwise load server-side fallback
+        if (Object.keys(localCart).length === 0 && Object.keys(serverCart).length > 0) {
+            localCart = serverCart;
+            localStorage.setItem('restaurant_cart', JSON.stringify(localCart));
+        }
+
+        // --- Category Filters ---
+        document.querySelectorAll('.category-pill').forEach(pill => {
+            pill.addEventListener('click', function() {
+                document.querySelectorAll('.category-pill').forEach(p => {
+                    p.classList.replace('btn-gold', 'btn-outline-gold');
+                    p.classList.remove('active');
+                });
+                this.classList.replace('btn-outline-gold', 'btn-gold');
+                this.classList.add('active');
+
+                const selectedCategory = this.dataset.categorySlug;
+                const header = document.getElementById('selected-category-header');
+                header.textContent = this.textContent.trim();
+
+                document.querySelectorAll('.menu-item-card-wrapper').forEach(card => {
+                    if (selectedCategory === 'all' || card.dataset.category === selectedCategory) {
+                        card.classList.remove('d-none');
+                    } else {
+                        card.classList.add('d-none');
+                    }
+                });
+            });
+        });
+
+        // --- Shopping Cart Algorithm ---
+        function getCartDetails() {
+            const items = [];
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                const id = btn.dataset.id;
+                if (localCart[id]) {
+                    items.push({
+                        id: id,
+                        name: btn.dataset.name,
+                        price: parseFloat(btn.dataset.price),
+                        quantity: localCart[id]
+                    });
+                }
+            });
+            return items;
+        }
+
+        function updateCartUI() {
+            const cartItems = getCartDetails();
+            const container = document.getElementById('cart-items-container');
+            const cartCountBadge = document.getElementById('cart-count');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const taxEl = document.getElementById('cart-tax');
+            const totalEl = document.getElementById('cart-total');
+
+            container.innerHTML = '';
+            let totalCount = 0;
+            let subtotal = 0;
+
+            if (cartItems.length === 0) {
+                document.getElementById('active-cart-view').classList.add('d-none');
+                document.getElementById('empty-cart-view').classList.remove('d-none');
+                cartCountBadge.textContent = '0';
+                return;
+            }
+
+            document.getElementById('active-cart-view').classList.remove('d-none');
+            document.getElementById('empty-cart-view').classList.add('d-none');
+
+            cartItems.forEach(item => {
+                totalCount += item.quantity;
+                const itemCost = item.price * item.quantity;
+                subtotal += itemCost;
+
+                const itemRow = document.createElement('div');
+                itemRow.className = 'd-flex justify-content-between align-items-center mb-3';
+                itemRow.innerHTML = `
+                    <div class="flex-grow-1 me-2" style="max-width: 55%;">
+                        <h6 class="mb-0 fw-semibold text-truncate small text-light">${item.name}</h6>
+                        <span class="text-gold small" style="font-size: 0.8rem;">₹${item.price.toFixed(0)}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-xs btn-outline-secondary rounded-circle px-2 py-0 dec-qty-btn border-secondary-subtle" data-id="${item.id}" style="font-size: 0.75rem;">-</button>
+                        <span class="fw-bold small text-light" style="min-width: 18px; text-align: center;">${item.quantity}</span>
+                        <button class="btn btn-xs btn-outline-secondary rounded-circle px-2 py-0 inc-qty-btn border-secondary-subtle" data-id="${item.id}" style="font-size: 0.75rem;">+</button>
+                    </div>
+                    <div class="text-end fw-bold text-light small" style="min-width: 60px;">
+                        ₹${itemCost.toFixed(0)}
+                    </div>
+                `;
+                container.appendChild(itemRow);
+            });
+
+            const tax = subtotal * 0.08;
+            const grandTotal = subtotal + tax;
+
+            cartCountBadge.textContent = totalCount;
+            subtotalEl.textContent = `₹${subtotal.toFixed(0)}`;
+            taxEl.textContent = `₹${tax.toFixed(0)}`;
+            totalEl.textContent = `₹${grandTotal.toFixed(0)}`;
+
+            document.querySelectorAll('.inc-qty-btn').forEach(btn => {
+                btn.addEventListener('click', () => adjustQty(btn.dataset.id, 1));
+            });
+            document.querySelectorAll('.dec-qty-btn').forEach(btn => {
+                btn.addEventListener('click', () => adjustQty(btn.dataset.id, -1));
+            });
+        }
+
+        function adjustQty(itemId, amount) {
+            if (!localCart[itemId]) return;
+            localCart[itemId] = (localCart[itemId] || 0) + amount;
+            if (localCart[itemId] <= 0) {
+                delete localCart[itemId];
+            }
+            localStorage.setItem('restaurant_cart', JSON.stringify(localCart));
+            updateCartUI();
+            debouncedSync();
+        }
+
+        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                localCart[id] = (localCart[id] || 0) + 1;
+                localStorage.setItem('restaurant_cart', JSON.stringify(localCart));
+                updateCartUI();
+                debouncedSync();
+            });
+        });
+
+        let syncTimeout;
+        function debouncedSync() {
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(async () => {
+                try {
+                    await fetch('{% url "cart_sync" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ cart: localCart })
+                    });
+                } catch (e) {
+                    console.error("Cart sync failed: ", e);
+                }
+            }, 300);
+        }
+
+        // --- Order Placement ---
+        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-order-btn');
+            const errorAlert = document.getElementById('checkout-error-alert');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Placing Order...';
+            errorAlert.classList.add('d-none');
+
+            const payload = {
+                customer_name: document.getElementById('customerName').value,
+                customer_phone: document.getElementById('customerPhone').value,
+                table_number: document.getElementById('tableNumber').value
+            };
+
+            try {
+                const response = await fetch('{% url "checkout" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (response.ok && data.status === 'success') {
+                    localStorage.removeItem('restaurant_cart');
+                    window.location.href = `/order/track/${data.order_uuid}/`;
+                } else {
+                    errorAlert.textContent = data.message || 'Failed to place order.';
+                    errorAlert.classList.remove('d-none');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-cash-register me-2"></i>Place Table Order';
+                }
+            } catch (err) {
+                errorAlert.textContent = 'Server response timeout or network issue.';
+                errorAlert.classList.remove('d-none');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-cash-register me-2"></i>Place Table Order';
+            }
+        });
+
+        updateCartUI();
+    });
+</script>
+{% endblock %}

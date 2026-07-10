@@ -1,0 +1,66 @@
+<div class="card order-card shadow-sm rounded-4 border-0 mb-2" id="order-card-{{ order.id }}" style="background-color: var(--bg-card) !important; border: 1px solid rgba(255, 255, 255, 0.04) !important;">
+    <div class="card-body p-4">
+        <!-- Ticket Header -->
+        <div class="d-flex justify-content-between align-items-start border-bottom border-secondary-subtle pb-2 mb-3">
+            <div>
+                <h6 class="fw-bold mb-0 text-light">Order #{{ order.id }}</h6>
+                <span class="text-secondary small" style="font-size: 0.75rem;">{{ order.created_at|date:"H:i A" }}</span>
+            </div>
+            <span class="badge {% if order.status == 'RECEIVED' %}bg-warning-subtle text-warning{% elif order.status == 'PREPARING' %}bg-primary-subtle text-primary{% else %}bg-success-subtle text-success{% endif %} rounded-pill order-card-status-badge font-monospace" style="font-size: 0.75rem;">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+
+        <!-- Customer Details -->
+        <div class="mb-3">
+            <h6 class="text-light fw-semibold small mb-1">
+                <i class="fa-regular fa-user text-gold me-1"></i> {{ order.customer_name }}
+            </h6>
+            <div class="text-secondary small d-flex flex-wrap gap-2 justify-content-between">
+                <span><i class="fa-solid fa-phone me-1"></i>{{ order.customer_phone }}</span>
+                <span class="badge bg-secondary-subtle text-light px-2 py-1">Table {{ order.table_number }}</span>
+            </div>
+        </div>
+
+        <!-- Ordered Items checklist -->
+        <div class="p-3 rounded-3 mb-3" style="background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03);">
+            <h6 class="fw-bold text-gold small mb-2"><i class="fa-solid fa-list-check me-2"></i>Items checklist</h6>
+            <ul class="list-unstyled mb-0 small">
+                {% for item in order.items.all %}
+                <li class="d-flex justify-content-between mb-1 py-1 border-bottom border-secondary-subtle" style="border-bottom-style: dotted !important;">
+                    <span class="text-light-emphasis">{{ item.menu_item.name }}</span>
+                    <span class="fw-bold text-gold">x {{ item.quantity }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Active transitions -->
+        <div class="btn-actions-container d-flex gap-2">
+            {% if order.status == 'RECEIVED' %}
+                <button class="btn btn-sm btn-gold w-100 py-2 fw-semibold transition-state-btn" 
+                        data-order-id="{{ order.id }}" 
+                        data-target-status="PREPARING">
+                    <i class="fa-solid fa-play me-2"></i>Start Preparation
+                </button>
+            {% elif order.status == 'PREPARING' %}
+                <button class="btn btn-sm btn-outline-danger transition-state-btn px-3" 
+                        data-order-id="{{ order.id }}" 
+                        data-target-status="CANCELLED">
+                    Cancel
+                </button>
+                <button class="btn btn-sm btn-gold transition-state-btn flex-grow-1 px-3 fw-semibold" 
+                        data-order-id="{{ order.id }}" 
+                        data-target-status="READY">
+                    <i class="fa-solid fa-check me-1"></i>Mark Ready
+                </button>
+            {% elif order.status == 'READY' %}
+                <button class="btn btn-sm btn-gold w-100 py-2 fw-semibold transition-state-btn" 
+                        data-order-id="{{ order.id }}" 
+                        data-target-status="COMPLETED">
+                    <i class="fa-solid fa-circle-check me-2"></i>Serve Order
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>

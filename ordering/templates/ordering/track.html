@@ -1,0 +1,222 @@
+{% extends 'ordering/base.html' %}
+{% block title %}Track Table Order - Apex Gourmet{% endblock %}
+
+{% block extra_css %}
+<style>
+    .milestone-container {
+        display: flex;
+        justify-content: justify;
+        position: relative;
+        margin: 45px 0;
+    }
+    .milestone-bar {
+        position: absolute;
+        top: 25px;
+        left: 5%;
+        width: 90%;
+        height: 4px;
+        background-color: rgba(255, 255, 255, 0.08);
+        z-index: 1;
+    }
+    .milestone-bar-fill {
+        height: 100%;
+        width: 0%;
+        background-color: var(--accent-gold);
+        transition: width 0.5s ease-in-out;
+    }
+    .milestone-step {
+        width: 25%;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+    .milestone-circle {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background-color: var(--bg-card);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px auto;
+        font-size: 1.25rem;
+        transition: all 0.3s ease;
+        border: 4px solid var(--bg-primary);
+    }
+    .milestone-step.active .milestone-circle {
+        background-color: var(--accent-gold);
+        color: #0b0b0d;
+        box-shadow: 0 0 0 5px rgba(255, 193, 7, 0.15);
+    }
+    .milestone-step.completed .milestone-circle {
+        background-color: var(--accent-gold);
+        color: #0b0b0d;
+    }
+    .milestone-step.cancelled .milestone-circle {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    .milestone-label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    .milestone-step.active .milestone-label, .milestone-step.completed .milestone-label {
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Order tracking card -->
+            <div class="card border-0 shadow-lg p-5 mb-4" style="background-color: var(--bg-card) !important;">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom border-secondary-subtle pb-3 mb-4">
+                    <div>
+                        <span class="text-secondary small fw-bold uppercase">Order Reference Reference</span>
+                        <h5 class="fw-bold mb-0 text-gold font-monospace">{{ order.unique_id }}</h5>
+                    </div>
+                    <div>
+                        <span class="badge bg-gold text-dark rounded-pill px-3 py-2 fw-semibold fs-6">Table {{ order.table_number }}</span>
+                    </div>
+                </div>
+
+                <div class="text-center my-2">
+                    <h4 class="fw-bold mb-1">Status: <span id="text-status-display" class="text-gold">{{ order.get_status_display }}</span></h4>
+                    <p class="text-secondary small">Last Sync: <span id="text-status-time">{{ order.updated_at|date:"H:i A" }}</span></p>
+                </div>
+
+                <!-- Interactive Timeline milestones -->
+                <div class="milestone-container" id="timeline-wrapper">
+                    <div class="milestone-bar">
+                        <div class="milestone-bar-fill" id="timeline-progress-bar"></div>
+                    </div>
+                    
+                    <div class="milestone-step" id="step-RECEIVED">
+                        <div class="milestone-circle"><i class="fa-solid fa-receipt"></i></div>
+                        <div class="milestone-label">Received</div>
+                    </div>
+                    <div class="milestone-step" id="step-PREPARING">
+                        <div class="milestone-circle"><i class="fa-solid fa-kitchen-set"></i></div>
+                        <div class="milestone-label">Preparing</div>
+                    </div>
+                    <div class="milestone-step" id="step-READY">
+                        <div class="milestone-circle"><i class="fa-solid fa-bell"></i></div>
+                        <div class="milestone-label">Ready to Serve</div>
+                    </div>
+                    <div class="milestone-step" id="step-COMPLETED">
+                        <div class="milestone-circle"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="milestone-label">Served</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipt Breakdown -->
+            <div class="card border-0 shadow-lg p-5" style="background-color: var(--bg-card) !important;">
+                <h5 class="fw-bold mb-4 serif-font text-gold"><i class="fa-solid fa-file-invoice me-2"></i>Table Invoice</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-borderless align-middle mb-0" style="background-color: transparent !important;">
+                        <thead>
+                            <tr class="border-bottom border-secondary-subtle text-secondary small">
+                                <th>Item Details</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr class="border-bottom border-secondary-subtle">
+                                <td class="py-3">
+                                    <h6 class="mb-0 fw-semibold text-light">{{ item.menu_item.name }}</h6>
+                                    <span class="text-secondary small">₹{{ item.unit_price|floatformat:0 }} each</span>
+                                </td>
+                                <td class="text-center fw-bold text-light">{{ item.quantity }}</td>
+                                <td class="text-end fw-bold text-light">₹{% widthratio item.unit_price 1 item.quantity %}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="fs-6 fw-bold">
+                                <td colspan="2" class="text-end text-secondary pt-4">Grand Total (incl. 8% tax)</td>
+                                <td class="text-end text-gold pt-4 fs-5">₹{{ order.total_price|floatformat:0 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const orderUuid = "{{ order.unique_id }}";
+        const steps = ['RECEIVED', 'PREPARING', 'READY', 'COMPLETED'];
+        
+        function updateTimeline(status) {
+            document.querySelectorAll('.milestone-step').forEach(el => {
+                el.classList.remove('active', 'completed', 'cancelled');
+            });
+            const progressBar = document.getElementById('timeline-progress-bar');
+            
+            if (status === 'CANCELLED') {
+                document.querySelectorAll('.milestone-step').forEach(el => {
+                    el.classList.add('cancelled');
+                });
+                progressBar.style.width = '100%';
+                progressBar.style.backgroundColor = '#dc3545';
+                return;
+            }
+
+            const currentIdx = steps.indexOf(status);
+            
+            let progressWidth = 0;
+            if (currentIdx === 0) progressWidth = 5;
+            else if (currentIdx === 1) progressWidth = 38;
+            else if (currentIdx === 2) progressWidth = 71;
+            else if (currentIdx === 3) progressWidth = 100;
+            progressBar.style.width = `${progressWidth}%`;
+            progressBar.style.backgroundColor = 'var(--accent-gold)';
+
+            steps.forEach((step, idx) => {
+                const el = document.getElementById(`step-${step}`);
+                if (idx < currentIdx) {
+                    el.classList.add('completed');
+                } else if (idx === currentIdx) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch(`/order/status/${orderUuid}/`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    document.getElementById('text-status-display').textContent = data.status_display;
+                    
+                    const date = new Date(data.updated_at);
+                    document.getElementById('text-status-time').textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    updateTimeline(data.status);
+
+                    if (data.status === 'COMPLETED' || data.status === 'CANCELLED') {
+                        clearInterval(pollingInterval);
+                    }
+                }
+            } catch (err) {
+                console.error("Polling status failed: ", err);
+            }
+        }
+
+        updateTimeline("{{ order.status }}");
+
+        // Poll every 5 seconds
+        const pollingInterval = setInterval(fetchStatus, 5000);
+    });
+</script>
+{% endblock %}

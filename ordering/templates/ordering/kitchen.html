@@ -1,0 +1,227 @@
+{% extends 'ordering/base.html' %}
+{% block title %}Kitchen Dashboard - Apex Gourmet{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kanban-lane {
+        min-height: calc(100vh - 220px);
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 20px;
+        padding: 20px;
+        transition: background-color 0.3s;
+    }
+    .order-card {
+        transition: transform 0.2s, box-shadow 0.2s, opacity 0.4s;
+    }
+    .order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.4) !important;
+        border-color: rgba(255, 193, 7, 0.1) !important;
+    }
+    .lane-header {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+    }
+    
+    /* Animation Keyframes */
+    .fade-out-left {
+        animation: fadeOutLeft 0.4s forwards;
+    }
+    .fade-out-right {
+        animation: fadeOutRight 0.4s forwards;
+    }
+    .fade-in-up {
+        animation: fadeInUp 0.4s forwards;
+    }
+
+    @keyframes fadeOutLeft {
+        to {
+            transform: translateX(-100%);
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            margin: 0;
+        }
+    }
+    @keyframes fadeOutRight {
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            margin: 0;
+        }
+    }
+    @keyframes fadeInUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0 text-gold serif-font">Kitchen Prep Board</h3>
+            <p class="text-secondary mb-0 small">Real-time ticket tracking board for culinary team</p>
+        </div>
+        <div>
+            <span class="badge bg-gold text-dark rounded-pill px-3 py-2 fw-bold" style="font-size: 0.9rem;">
+                <span id="active-tickets-counter">{{ active_count }}</span> <span id="active-tickets-label">Active Ticket{{ active_count|pluralize }}</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Kanban Grid -->
+    <div class="row g-4">
+        <!-- Lane 1: Received Orders -->
+        <div class="col-md-4">
+            <div class="lane-header text-warning">
+                <span><i class="fa-solid fa-receipt me-2"></i>Received (New)</span>
+                <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1 font-monospace" id="count-RECEIVED" style="font-size: 0.85rem;">0</span>
+            </div>
+            <div class="kanban-lane d-flex flex-column gap-3 shadow" id="lane-RECEIVED">
+                {% for o in orders %}
+                    {% if o.status == 'RECEIVED' %}
+                        {% include 'ordering/includes/kitchen_card.html' with order=o %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Lane 2: Preparing Orders -->
+        <div class="col-md-4">
+            <div class="lane-header text-primary">
+                <span><i class="fa-solid fa-fire me-2"></i>Preparing (Cooking)</span>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 font-monospace" id="count-PREPARING" style="font-size: 0.85rem;">0</span>
+            </div>
+            <div class="kanban-lane d-flex flex-column gap-3 shadow" id="lane-PREPARING">
+                {% for o in orders %}
+                    {% if o.status == 'PREPARING' %}
+                        {% include 'ordering/includes/kitchen_card.html' with order=o %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Lane 3: Ready to Serve Orders -->
+        <div class="col-md-4">
+            <div class="lane-header text-success">
+                <span><i class="fa-solid fa-bell me-2"></i>Ready (To Serve)</span>
+                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 font-monospace" id="count-READY" style="font-size: 0.85rem;">0</span>
+            </div>
+            <div class="kanban-lane d-flex flex-column gap-3 shadow" id="lane-READY">
+                {% for o in orders %}
+                    {% if o.status == 'READY' %}
+                        {% include 'ordering/includes/kitchen_card.html' with order=o %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        function recountLanes() {
+            const receivedCount = document.getElementById('lane-RECEIVED').children.length;
+            const preparingCount = document.getElementById('lane-PREPARING').children.length;
+            const readyCount = document.getElementById('lane-READY').children.length;
+
+            document.getElementById('count-RECEIVED').textContent = receivedCount;
+            document.getElementById('count-PREPARING').textContent = preparingCount;
+            document.getElementById('count-READY').textContent = readyCount;
+            
+            const total = receivedCount + preparingCount + readyCount;
+            document.getElementById('active-tickets-counter').textContent = total;
+            document.getElementById('active-tickets-label').textContent = `Active Ticket${total === 1 ? '' : 's'}`;
+        }
+
+        // Action transition delegation
+        document.addEventListener('click', async function(e) {
+            const btn = e.target.closest('.transition-state-btn');
+            if (!btn) return;
+
+            const orderId = btn.dataset.orderId;
+            const targetStatus = btn.dataset.targetStatus;
+            const card = document.getElementById(`order-card-${orderId}`);
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            try {
+                const response = await fetch(`/kitchen/transition/${orderId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ status: targetStatus })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.status === 'success') {
+                    card.classList.add(targetStatus === 'COMPLETED' || targetStatus === 'CANCELLED' ? 'fade-out-right' : 'fade-out-left');
+
+                    setTimeout(() => {
+                        card.classList.remove('fade-out-left', 'fade-out-right');
+                        
+                        if (targetStatus === 'COMPLETED' || targetStatus === 'CANCELLED') {
+                            card.remove();
+                        } else {
+                            const targetLane = document.getElementById(`lane-${targetStatus}`);
+                            
+                            const btnContainer = card.querySelector('.btn-actions-container');
+                            if (targetStatus === 'PREPARING') {
+                                btnContainer.innerHTML = `
+                                    <button class="btn btn-sm btn-outline-danger transition-state-btn px-3" data-order-id="${orderId}" data-target-status="CANCELLED">Cancel</button>
+                                    <button class="btn btn-sm btn-gold transition-state-btn flex-grow-1 px-3 fw-semibold" data-order-id="${orderId}" data-target-status="READY"><i class="fa-solid fa-check me-1"></i>Mark Ready</button>
+                                `;
+                            } else if (targetStatus === 'READY') {
+                                btnContainer.innerHTML = `
+                                    <button class="btn btn-sm btn-gold w-100 py-2 fw-semibold transition-state-btn" data-order-id="${orderId}" data-target-status="COMPLETED"><i class="fa-solid fa-circle-check me-2"></i>Serve Order</button>
+                                `;
+                            }
+                            
+                            const statusBadge = card.querySelector('.order-card-status-badge');
+                            statusBadge.className = `badge ${targetStatus === 'PREPARING' ? 'bg-primary-subtle text-primary' : 'bg-success-subtle text-success'} rounded-pill order-card-status-badge font-monospace`;
+                            statusBadge.textContent = data.new_status_display;
+
+                            targetLane.appendChild(card);
+                            card.classList.add('fade-in-up');
+                            setTimeout(() => card.classList.remove('fade-in-up'), 400);
+                        }
+                        recountLanes();
+                    }, 400);
+                } else {
+                    alert(data.message || 'Operation failed.');
+                    btn.disabled = false;
+                    btn.textContent = 'Retry';
+                }
+            } catch (err) {
+                alert('Network timeout.');
+                btn.disabled = false;
+                btn.textContent = 'Retry';
+            }
+        });
+
+        recountLanes();
+    });
+</script>
+{% endblock %}
